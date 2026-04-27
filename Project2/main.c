@@ -39,8 +39,9 @@ static void average_hpf(HPFStats *hs, int n) {
 /* ─── Main ─── */
 
 int main(void) {
-    Stats    fcfs_avg = {0}, sjf_avg = {0}, srt_avg = {0}, rr_avg = {0};
+    Stats    fcfs_avg = {0}, sjf_avg = {0}, srt_avg = {0}, rr_avg = {0}; 
     HPFStats hpf_np_avg, hpf_p_avg, hpf_np_aging_avg, hpf_p_aging_avg;
+    /* initialize hpf memory space*/
     memset(&hpf_np_avg,       0, sizeof(HPFStats));
     memset(&hpf_p_avg,        0, sizeof(HPFStats));
     memset(&hpf_np_aging_avg, 0, sizeof(HPFStats));
