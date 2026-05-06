@@ -1,17 +1,5 @@
-/* ============================================================
- * workload.c - 工作负载生成模块
- * 负责人: Member 1 (Team Lead)
- *
- * 实现细节:
- *   - 进程数量: NUM_PROCESSES (默认 150)
- *   - 进程大小: 在 {5, 11, 17, 31} MB 中随机均匀选取
- *   - 服务时长: 在 {1, 2, 3, 4, 5} 秒中随机均匀选取
- *   - 到达时间: 在 [0, SIM_DURATION_SEC] 区间内随机分布
- *   - 链表按到达时间升序排序
- * ============================================================ */
 #include "workload.h"
 
-/* 给进程分配名称: 前 26 个用 A-Z, 之后用 P27, P28 ... */
 static void assign_name(Process *p, int idx) {
     if (idx < 26) {
         p->name[0] = 'A' + idx;
@@ -21,7 +9,6 @@ static void assign_name(Process *p, int idx) {
     }
 }
 
-/* 按 arrival_ms 升序插入链表 */
 static Process *insert_sorted(Process *head, Process *node) {
     if (!head || node->arrival_ms < head->arrival_ms) {
         node->next = head;
@@ -48,7 +35,6 @@ Process *generate_workload(int count) {
         assign_name(p, i);
         p->size_pages   = PROC_SIZES[rand() % n_sizes];
         p->duration_ms  = PROC_DURATIONS[rand() % n_durs] * 1000;
-        /* 到达时间在整个模拟窗口内均匀分布 */
         p->arrival_ms   = rand() % (SIM_DURATION_SEC * 1000);
         p->current_page = 0;
         p->is_running   = false;

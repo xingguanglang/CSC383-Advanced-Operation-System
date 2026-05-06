@@ -1,47 +1,22 @@
-/* ============================================================
- * simulator.c - 模拟器引擎核心实现
- * 负责人: Member 5
- *
- * 模拟流程:
- *   时间步进 100 ms (REF_INTERVAL_MS)
- *   每个时间片做:
- *     1. 检查是否有进程到达, 若空闲页框 >= 4 则启动它 (装入 page-0)
- *     2. 对每个正在运行的进程, 生成一次内存引用
- *        - 若页面在内存: HIT, 更新统计
- *        - 否则:        MISS, 若有空闲页框直接装入,
- *                       否则按算法选 victim 换出
- *     3. 检查进程是否到期, 到期则释放其页框
- *
- * 局部性引用算法 (按项目规范):
- *   r = rand() % 11 (生成 0..10)
- *   若 0 <= r < 7: Δi ∈ {-1, 0, +1} (各 1/3 概率)
- *   若 7 <= r <=10: |Δi| >= 2, 即 j ∈ [0, i-2] ∪ [i+2, size-1]
- *   越界时按 wrap (i 在 [0, size-1] 之间循环)
- * ============================================================ */
 #include "simulator.h"
 #include "page_table.h"
 #include "replacement.h"
 #include "stats.h"
 
-/* ---------- 局部性引用算法 ---------- */
 int next_page_with_locality(int i, int size) {
     if (size <= 1) return 0;
-    int r = rand() % 11;          /* 0..10 */
+    int r = rand() % 11;         
     int next;
     if (r < 7) {
-        /* 70% 概率: i, i-1, i+1 */
         int delta = (rand() % 3) - 1;     /* -1, 0, +1 */
         next = i + delta;
         if (next < 0) next = size - 1;     /* wrap */
         if (next >= size) next = 0;
     } else {
-        /* 30% 概率: |Δ| >= 2 */
-        /* 候选区间: [0, i-2] ∪ [i+2, size-1] */
-        int low_count  = (i - 2 >= 0) ? (i - 1) : 0;        /* 元素数 */
+        int low_count  = (i - 2 >= 0) ? (i - 1) : 0;  
         int high_count = (i + 2 <= size - 1) ? (size - 1 - (i + 2) + 1) : 0;
         int total = low_count + high_count;
         if (total <= 0) {
-            /* 进程太小放不下, 退化到任意页 */
             next = rand() % size;
         } else {
             int pick = rand() % total;
@@ -52,7 +27,6 @@ int next_page_with_locality(int i, int size) {
     return next;
 }
 
-/* ---------- 链表深拷贝 ---------- */
 Process *clone_workload(Process *src) {
     Process *head = NULL, *tail = NULL;
     while (src) {
@@ -73,7 +47,6 @@ Process *clone_workload(Process *src) {
     return head;
 }
 
-/* 尝试启动 (swap-in) 队首到达进程 */
 static void try_start_processes(Process **queue_head,
                                 Process **running_head,
                                 int now_ms,
@@ -88,9 +61,9 @@ static void try_start_processes(Process **queue_head,
         *queue_head = p->next;
         p->next = NULL;
 
-        /* 装入 page-0 */
+        /* page-0 */
         int frame = allocate_frame(p->pid, p->name, 0, now_ms);
-        if (frame < 0) {                    /* 不应发生,前面已检 */
+        if (frame < 0) {                  
             p->next = *queue_head;
             *queue_head = p;
             break;
@@ -102,7 +75,6 @@ static void try_start_processes(Process **queue_head,
         p->finish_ms      = now_ms + p->duration_ms;
         stats->processes_swapped_in++;
 
-        /* 加入运行链表 */
         p->next = *running_head;
         *running_head = p;
 
@@ -117,7 +89,6 @@ static void try_start_processes(Process **queue_head,
     (void)alg;
 }
 
-/* 处理一次内存引用 */
 static void do_reference(Process *p, int now_ms,
                          AlgorithmType alg, bool verbose,
                          RunStats *stats, int *ref_print_left) {
@@ -150,7 +121,7 @@ static void do_reference(Process *p, int now_ms,
         }
     }
 
-    /* 详细打印前 PRINT_REF_LIMIT 次 */
+    /* PRINT_REF_LIMIT */
     if (verbose && *ref_print_left > 0) {
         printf("  [t=%6.2fs] %-4s ref page %2d  %s",
                now_ms / 1000.0, p->name, next_page,
@@ -163,7 +134,6 @@ static void do_reference(Process *p, int now_ms,
     }
 }
 
-/* 检查并清理已完成进程 */
 static void reap_completed(Process **running_head,
                            int now_ms, bool verbose,
                            RunStats *stats) {
@@ -190,7 +160,6 @@ static void reap_completed(Process **running_head,
     }
 }
 
-/* ---------- 主模拟循环 ---------- */
 RunStats run_simulation(AlgorithmType alg,
                         Process *workload_template,
                         bool verbose) {
@@ -219,7 +188,6 @@ RunStats run_simulation(AlgorithmType alg,
         reap_completed(&running, now, verbose, &stats);
     }
 
-    /* 清理 */
     while (running) { Process *n = running->next; free(running); running = n; }
     while (queue)   { Process *n = queue->next;   free(queue);   queue   = n; }
 

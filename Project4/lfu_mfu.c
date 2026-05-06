@@ -1,14 +1,3 @@
-/* ============================================================
- * lfu_mfu.c - LFU (Least Frequently Used) 与
- *             MFU (Most Frequently Used) 页面替换算法
- * 负责人: Member 4
- *
- * 思路:
- *   每个页框维护 use_count (引用次数).
- *   命中或装入时由 simulator 自增.
- *   LFU: 挑选 use_count 最小的页框 (并列时取较旧的).
- *   MFU: 挑选 use_count 最大的页框 (并列时取较旧的).
- * ============================================================ */
 #include "page_table.h"
 #include "replacement.h"
 
@@ -48,7 +37,6 @@ int select_victim_mfu(int now_ms) {
     return victim;
 }
 
-/* 统一调度入口 (放在这里,因为它需要看到所有算法函数原型) */
 int select_victim(AlgorithmType alg, int now_ms) {
     switch (alg) {
         case ALG_FIFO:   return select_victim_fifo(now_ms);

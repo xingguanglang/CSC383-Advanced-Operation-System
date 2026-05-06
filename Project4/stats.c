@@ -1,7 +1,3 @@
-/* ============================================================
- * stats.c - 统计输出实现
- * 负责人: Member 5
- * ============================================================ */
 #include "stats.h"
 
 void print_run_stats(AlgorithmType alg, int run_idx, RunStats s) {
