@@ -1,5 +1,0 @@
-My first input line
-Second user message
-Third message from terminal
-Fourth line here
-Fifth and final input
